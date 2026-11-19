@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fourth & Long — NFL Ticker</title>
+<style>
+:root{--bg:#080d17;--panel:#111a29;--line:#27344a;--muted:#8fa0b8;--white:#f5f7fb;--orange:#ff6b35;--green:#4fdb9b;--blue:#59a9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1b3350 0,transparent 55%),var(--bg);color:var(--white);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.top{height:58px;border-bottom:1px solid #ffffff14;display:flex;align-items:center;justify-content:space-between;padding:0 max(22px,calc((100vw - 1100px)/2));background:#080d17d9}.brand{display:flex;align-items:center;gap:11px;font-weight:900;letter-spacing:.07em}.mark{background:var(--orange);color:#111827;padding:4px 7px;border-radius:5px;font-size:12px}.nav{color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase}.live{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.12em}.live:before{content:"";display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:8px;box-shadow:0 0 12px var(--green)}
+main{max-width:1100px;margin:0 auto;padding:46px 22px 38px}.eyebrow{color:var(--orange);text-transform:uppercase;font-size:11px;font-weight:900;letter-spacing:.2em}.heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:8px 0 24px}.heading h1{font-size:clamp(34px,6vw,58px);line-height:1;margin:0;letter-spacing:-.055em}.heading p{color:var(--muted);margin:12px 0 0}.date{text-align:right;color:var(--muted);font-size:12px}.date strong{display:block;color:var(--white);font-size:14px;margin-top:4px}
+.ticker{height:48px;background:var(--orange);color:#101722;border-radius:8px;display:flex;overflow:hidden;align-items:center;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:26px}.ticker-label{height:100%;display:flex;align-items:center;padding:0 17px;background:#ff895d;white-space:nowrap}.ticker-window{overflow:hidden;flex:1;white-space:nowrap}.ticker-run{display:inline-block;animation:scroll 38s linear infinite;padding-left:100%}.ticker:hover .ticker-run{animation-play-state:paused}.ticker-run span{margin-right:48px}@keyframes scroll{to{transform:translateX(-100%)}}
+.content{display:grid;grid-template-columns:1.65fr .85fr;gap:18px}.box{background:linear-gradient(145deg,#121d2d,#0f1724);border:1px solid var(--line);border-radius:12px;padding:22px}.box-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.box-head h2{font-size:14px;margin:0;letter-spacing:.1em;text-transform:uppercase}.tag{font-size:10px;color:#c9d4e4;border:1px solid #34435a;border-radius:999px;padding:4px 9px;text-transform:uppercase;letter-spacing:.1em}.feature{border:1px solid #34435a;border-radius:10px;background:linear-gradient(100deg,#19273a,#101a29);padding:23px 22px;position:relative;overflow:hidden}.feature:after{content:"WEEK 11";position:absolute;right:18px;top:14px;color:#ffffff0c;font-size:47px;font-weight:1000;letter-spacing:-.08em}.matchup{display:flex;align-items:center;justify-content:center;gap:24px;padding:16px 4px 19px;position:relative}.team{width:140px;text-align:center}.crest{width:54px;height:54px;border-radius:16px;background:#23354b;margin:0 auto 9px;display:grid;place-items:center;font-weight:950;font-size:14px;letter-spacing:-.03em;color:white;border:1px solid #ffffff1a}.team:nth-of-type(3) .crest{background:#183b70}.team-name{font-size:13px;font-weight:800}.team-city{display:block;color:var(--muted);font-size:11px;margin-top:2px}.versus{color:#64758e;font-size:10px;font-weight:900;letter-spacing:.15em}.game-time{text-align:center;border-top:1px solid #ffffff12;padding-top:16px;color:#cbd5e1;font-size:12px}.game-time b{color:white}.next{display:flex;align-items:center;gap:11px;margin-top:14px;color:var(--muted);font-size:11px}.next .bar{height:3px;background:#27364c;border-radius:5px;flex:1;overflow:hidden}.next .bar i{display:block;width:30%;height:100%;background:var(--orange)}
+.side{display:flex;flex-direction:column;gap:18px}.games{display:grid;gap:10px}.game-card{border:1px solid #2b3a50;border-radius:9px;padding:13px 14px;background:#111b2a}.game-top{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#9aabc1;font-size:10px;text-transform:uppercase;letter-spacing:.09em;margin-bottom:9px}.game-state{color:var(--green);font-weight:900}.game-team{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13px}.game-team img{width:23px;height:23px;object-fit:contain}.game-name{flex:1}.game-record{color:var(--muted);font-size:10px}.game-score{font-weight:900;font-size:16px;min-width:24px;text-align:right}.loading,.empty-feed{padding:18px 6px;color:var(--muted);font-size:12px}.error{color:#ffb7a6}.feed-meta{color:#8292a9;font-size:10px;margin-top:8px}.empty{padding:15px 0 9px}.empty-icon{width:38px;height:38px;border:1px solid #34445c;border-radius:11px;display:grid;place-items:center;color:var(--orange);font-size:19px;margin-bottom:13px}.empty h3{margin:0;font-size:17px}.empty p{color:var(--muted);font-size:12px;margin:7px 0 0}.upcoming{border-top:1px solid #ffffff13;padding-top:15px;margin-top:16px}.up-row{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin:8px 0;color:#d6deea}.up-row small{color:var(--muted)}.note{font-size:10px;color:#718198;margin-top:17px}
+.recent{margin-top:18px}.recent .box-head{margin:0}.recent p{color:var(--muted);font-size:12px;margin:7px 0 0}.recent strong{color:#e7edf7}.footer{border-top:1px solid #ffffff12;margin-top:30px;padding-top:16px;color:#718198;font-size:10px;display:flex;justify-content:space-between;gap:15px}.footer a{color:#93a5bd;text-decoration:none}
+@media(max-width:760px){main{padding-top:32px}.content{grid-template-columns:1fr}.heading{align-items:flex-start}.date{font-size:10px}.box{padding:17px}.feature:after{font-size:35px}.team{width:112px}.matchup{gap:12px}}
+@media(max-width:420px){.nav{display:none}.date{max-width:92px}.heading h1{font-size:36px}.feature{padding:17px 13px}.team{width:92px}.crest{width:48px;height:48px}.team-name{font-size:11px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="mark">NFL</span> FOURTH &amp; LONG</div><div class="nav">Scores&nbsp;&nbsp; · &nbsp;&nbsp;Schedule&nbsp;&nbsp; · &nbsp;&nbsp;Around the league</div><div class="live">Ticker on</div></header>
+<main>
+<div class="eyebrow">The Sunday feeling, all week long</div>
+<div class="heading"><div><h1>THE NFL TICKER</h1><p>Live scores, game status, and upcoming matchups.</p></div><div class="date" aria-label="Current date"><span id="today-weekday"></span><strong id="today-date"></strong></div></div>
+<div class="ticker"><div class="ticker-label">Scoreboard&nbsp; ↗</div><div class="ticker-window"><div class="ticker-run" id="ticker-run"><span>Loading live NFL scoreboard…</span><span>Scores update every 60 seconds</span><span>Loading live NFL scoreboard…</span></div></div></div>
+<div class="content">
+<section class="box"><div class="box-head"><h2>Scores &amp; schedule</h2><span class="tag" id="week-label">Loading</span></div><div id="games" class="games"><div class="loading">Checking the scoreboard…</div></div></section>
+<aside class="side"><section class="box"><div class="box-head"><h2>Today</h2><span class="tag" id="today-tag"></span></div><div class="empty"><div class="empty-icon">🏈</div><h3 id="today-status">Checking games…</h3><p id="today-detail">Loading the latest schedule and scores.</p></div><div class="upcoming" id="today-games"></div><div class="note" id="update-note">Scores refresh automatically every minute.</div></section><section class="box"><div class="box-head"><h2>Live data</h2><span class="tag">ESPN</span></div><div class="empty" style="padding-bottom:5px"><h3 id="connection-status">Connecting…</h3><p>Scoreboard updates automatically every 60 seconds while this page is open.</p></div></section></aside>
+</div>
+<div class="footer"><span>FOURTH &amp; LONG · YOUR NFL DAY, AT A GLANCE</span><span>Schedule: <a href="https://www.nfl.com/schedules/2026/REG11/" target="_blank" rel="noreferrer">NFL.com</a> · Scores refresh when you reload</span></div>
+</main>
+<script>
+(() => {
+  const API = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+  const $ = id => document.getElementById(id);
+  const etParts = date => new Intl.DateTimeFormat('en-US', {timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',weekday:'long'}).formatToParts(date);
+  const getPart = (parts, type) => parts.find(part => part.type === type).value;
+  const dateKey = date => { const p=etParts(date); return getPart(p,'year')+getPart(p,'month')+getPart(p,'day'); };
+  const niceDate = date => new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',month:'short',day:'numeric'}).format(date);
+  const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const dateFor = iso => new Date(iso);
+  function gameCard(event) {
+    const comp=event.competitions?.[0] || {};
+    const competitors=comp.competitors || [];
+    const away=competitors.find(c=>c.homeAway==='away') || competitors[0] || {};
+    const home=competitors.find(c=>c.homeAway==='home') || competitors[1] || {};
+    const status=comp.status?.type || event.status?.type || {};
+    const label=status.shortDetail || status.detail || (status.name==='STATUS_SCHEDULED'?'Scheduled':'');
+    const teams=[away,home].map(team=>{
+      const info=team.team||{};
+      const record=(team.records||[]).find(r=>r.type==='total')?.summary || '';
+      return `<div class="game-team">${info.logo?`<img src="${safe(info.logo)}" alt="">`:''}<span class="game-name">${safe(info.displayName||info.name||'Team')}</span><span class="game-record">${safe(record)}</span><span class="game-score">${safe(team.score||'—')}</span></div>`;
+    }).join('');
+    const isLive=status.state==='in';
+    const when=status.completed?'FINAL':label;
+    return `<article class="game-card"><div class="game-top"><span>${safe(niceDate(dateFor(event.date)))} · ${safe(event.name||'NFL game')}</span><span class="game-state" style="${isLive?'':'color:#b5c2d4'}">${safe(when)}</span></div>${teams}</article>`;
+  }
+  function updateClock() {
+    const now=new Date(), parts=etParts(now);
+    $('today-weekday').textContent=getPart(parts,'weekday').toUpperCase();
+    $('today-date').textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',year:'numeric'}).format(now);
+    $('today-tag').textContent=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric'}).format(now);
+  }
+  async function refresh() {
+    updateClock();
+    const now=new Date();
+      const url = API;
+    try {
+      const response=await fetch(url,{cache:'no-store'});
+      if(!response.ok) throw new Error(`Scoreboard returned ${response.status}`);
+      const data=await response.json();
+      const events=data.events||[];
+      const week=data.week?.number;
+      $('week-label').textContent=week?`Week ${week}`:'NFL';
+      if(!events.length){$('games').innerHTML='<div class="empty-feed">No games in the current scoreboard window.</div>';}
+      else {
+        events.sort((a,b)=>new Date(a.date)-new Date(b.date));
+        $('games').innerHTML=events.map(gameCard).join('');
+      }
+      const todayKey=dateKey(now);
+      const todayEvents=events.filter(e=>dateKey(dateFor(e.date))===todayKey);
+      const todayLive=todayEvents.some(e=>e.competitions?.[0]?.status?.type?.state==='in');
+      $('today-status').textContent=todayLive?'Games are live':todayEvents.length?'NFL games today':'No NFL games today';
+      $('today-detail').textContent=todayLive?'Scores and game status are updating below.':todayEvents.length?`${todayEvents.length} game${todayEvents.length===1?'':'s'} on today’s schedule.`:'Here are the next matchups on the schedule.';
+      const upcoming=events.filter(e=>dateKey(dateFor(e.date))!==todayKey).slice(0,4);
+      $('today-games').innerHTML=todayEvents.length?todayEvents.map(e=>`<div class="up-row"><span>${safe(e.shortName||e.name)}</span><small>${safe(e.competitions?.[0]?.status?.type?.shortDetail||niceDate(dateFor(e.date)))}</small></div>`).join(''):upcoming.map(e=>`<div class="up-row"><span>${safe(e.shortName||e.name)}</span><small>${safe(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).format(dateFor(e.date)))} ET · ${safe(niceDate(dateFor(e.date)))}</small></div>`).join('');
+      const ticker=events.slice(0,8).map(e=>`<span>${safe(e.shortName||e.name)} · ${safe(e.competitions?.[0]?.status?.type?.shortDetail||niceDate(dateFor(e.date)))}</span>`).join('');
+      $('ticker-run').innerHTML=ticker||'<span>No upcoming NFL games</span><span>Scores update every 60 seconds</span>';
+      const updated=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',second:'2-digit'}).format(new Date());
+      $('update-note').textContent=`Last updated ${updated} ET · refreshes every 60 seconds.`;
+      $('connection-status').textContent='Connected';
+    } catch(error) {
+      $('connection-status').textContent='Could not reach scoreboard';
+      $('games').innerHTML=`<div class="loading error">Live scores could not load. Check your internet connection or open the ESPN scoreboard directly.</div><div class="feed-meta"><a href="https://www.espn.com/nfl/scoreboard" target="_blank" rel="noreferrer">Open ESPN NFL scoreboard ↗</a></div>`;
+      $('today-status').textContent='Scoreboard unavailable';
+      $('today-detail').textContent='The page will try again automatically.';
+$('update-note').textContent=`Retrying in 60 seconds (${error.message}).`;
+    }
+  }
+  refresh();
+  setInterval(refresh,60000);
+})();
+</script>
+</body></html>
+
+
+
+
+
+
+
+
