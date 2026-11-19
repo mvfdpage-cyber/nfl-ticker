@@ -28,6 +28,7 @@ main{padding-top:42px}.eyebrow{color:#84d6f7;letter-spacing:.22em}.eyebrow span{
 :root{--orange:#e30526;--blue:#e30526;--green:#ff7181;--line:#a84a58}
 body{background:radial-gradient(ellipse at 14% 0%,#641724 0,transparent 38%),radial-gradient(ellipse at 90% 18%,#31363a 0,transparent 28%),linear-gradient(150deg,#100c0e,#211317 54%,#101114);background-attachment:fixed}
 .eyebrow{color:#ff8592}.ticker{background:linear-gradient(90deg,#c9142f,#8e0e23);border-color:#ff9aa5}.ticker-label{background:linear-gradient(135deg,#f2f2f2,#bfc3c6);color:#201216}.box{background:linear-gradient(145deg,#29171c,#171317);border-color:#8b3948}.box:before{background:linear-gradient(#f0f0f0,#e30526,#f0f0f0)}.game-card{background:linear-gradient(120deg,#351b22,#21151a);border-color:#713744;border-left-color:#e30526}.game-card:hover{border-color:#ff9aa5}.game-state{color:#ff8795}.empty-icon{background:linear-gradient(140deg,#d91432,#7b0d20);border-color:#f3abb4}.footer a{color:#ff9aa5}.box-head h2:before{content:"🏒"}
+.news-box{margin-top:18px}.news-intro{color:var(--muted);font-size:12px;margin:-7px 0 16px}.news-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.news-card{display:block;border:1px solid #713744;border-radius:9px;padding:14px;background:linear-gradient(120deg,#351b22,#21151a);color:var(--white);text-decoration:none;transition:transform .18s,border-color .18s}.news-card:hover{transform:translateY(-2px);border-color:#ff9aa5}.news-card small{display:block;color:#ff8795;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}.news-card strong{display:block;font-size:14px;line-height:1.3}.news-card span{display:block;color:var(--muted);font-size:11px;line-height:1.45;margin-top:7px}.news-link{color:inherit;text-decoration:none}.news-error{color:#ffb7a6;font-size:12px}@media(max-width:600px){.news-list{grid-template-columns:1fr}.news-box .box-head{align-items:flex-start;gap:10px}}
 </style>
 </head>
 <body>
@@ -40,11 +41,13 @@ body{background:radial-gradient(ellipse at 14% 0%,#641724 0,transparent 38%),rad
 <section class="box"><div class="box-head"><h2>Scores &amp; schedule</h2><span class="tag" id="week-label">Loading</span></div><div id="games" class="games"><div class="loading">Checking the scoreboard…</div></div></section>
 <aside class="side"><section class="box"><div class="box-head"><h2>Today</h2><span class="tag" id="today-tag"></span></div><div class="empty"><div class="empty-icon">🏒</div><h3 id="today-status">Checking games…</h3><p id="today-detail">Loading the latest schedule and scores.</p></div><div class="upcoming" id="today-games"></div><div class="note" id="update-note">Scores refresh automatically every minute.</div></section><section class="box"><div class="box-head"><h2>Live data</h2><span class="tag">ESPN</span></div><div class="empty" style="padding-bottom:5px"><h3 id="connection-status">Connecting…</h3><p>Scoreboard updates automatically every 60 seconds while this page is open.</p></div></section></aside>
 </div>
+<section class="box news-box" aria-live="polite"><div class="box-head"><h2>Game highlights &amp; news</h2><a class="tag news-link" href="https://www.espn.com/nhl/video/" target="_blank" rel="noreferrer">Watch NHL highlights ↗</a></div><p class="news-intro">Fresh NHL headlines, game previews, and recaps from ESPN.</p><div id="news-items" class="news-list"><div class="loading">Loading the latest hockey stories…</div></div><div class="feed-meta" id="news-updated">News refreshes every 10 minutes.</div></section>
 <div class="footer"><span>BENTLEYS NHL TICKET 26–27 · HOCKEYTOWN, EVERY SHIFT</span><span>Schedule: <a href="https://www.espn.com/nhl/scoreboard" target="_blank" rel="noreferrer">ESPN</a> · Live feed refreshes every 60 seconds</span></div>
 </main>
 <script>
 (() => {
   const API = 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard';
+  const NEWS_API = 'https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/news';
   const $ = id => document.getElementById(id);
   const etParts = date => new Intl.DateTimeFormat('en-US', {timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',weekday:'long'}).formatToParts(date);
   const getPart = (parts, type) => parts.find(part => part.type === type).value;
@@ -112,11 +115,38 @@ body{background:radial-gradient(ellipse at 14% 0%,#641724 0,transparent 38%),rad
 $('update-note').textContent=`Retrying in 60 seconds (${error.message}).`;
     }
   }
+  function newsCard(article) {
+    const candidate=article.links?.web?.href || article.links?.mobile?.href || 'https://www.espn.com/nhl/';
+    let href='https://www.espn.com/nhl/';
+    try { const parsed=new URL(candidate); if(parsed.protocol==='https:') href=parsed.href; } catch {}
+    const type=(article.type||'NHL STORY').replace(/([A-Z])/g,' $1').trim();
+    const date=article.published||article.lastModified;
+    const stamp=date?new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(date))+' ET':'Latest';
+    return `<a class="news-card" href="${safe(href)}" target="_blank" rel="noreferrer"><small>${safe(type)} · ${safe(stamp)}</small><strong>${safe(article.headline||'NHL update')}</strong><span>${safe(article.description||'Open the story for the latest details.')}</span></a>`;
+  }
+  async function refreshNews() {
+    try {
+      const response=await fetch(NEWS_API,{cache:'no-store'});
+      if(!response.ok) throw new Error(`News feed returned ${response.status}`);
+      const data=await response.json();
+      const articles=data.articles||[];
+      $('news-items').innerHTML=articles.length?articles.slice(0,6).map(newsCard).join(''):'<div class="empty-feed">No NHL stories are available right now.</div>';
+      const updated=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'}).format(new Date());
+      $('news-updated').textContent=`Latest ESPN NHL stories · checked ${updated} ET.`;
+    } catch(error) {
+      $('news-items').innerHTML='<div class="news-error">NHL news is temporarily unavailable. Live scores will continue to update.</div>';
+      $('news-updated').textContent='News will retry in 10 minutes.';
+    }
+  }
+  refreshNews();
+  setInterval(refreshNews,600000);
   refresh();
   setInterval(refresh,60000);
 })();
 </script>
 </body></html>
+
+
 
 
 
