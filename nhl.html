@@ -77,13 +77,15 @@ body{background:radial-gradient(ellipse at 14% 0%,#641724 0,transparent 38%),rad
   async function refresh() {
     updateClock();
     const now=new Date();
-      const end=new Date(now.getTime()+6*86400000);
-    const url=API+'?dates='+dateKey(now)+'-'+dateKey(end);
+      const dateKeys=Array.from({length:7},(_,i)=>{const day=new Date(now);day.setDate(day.getDate()+i);return dateKey(day);});
     try {
-      const response=await fetch(url,{cache:'no-store'});
-      if(!response.ok) throw new Error(`Scoreboard returned ${response.status}`);
-      const data=await response.json();
-      const events=data.events||[];
+      const payloads=await Promise.all(dateKeys.map(async day=>{
+        const response=await fetch(`${API}?dates=${day}`,{cache:'no-store'});
+        if(!response.ok) throw new Error(`Scoreboard returned ${response.status} for ${day}`);
+        return response.json();
+      }));
+      const data=payloads[0]||{};
+      const events=payloads.flatMap(day=>day.events||[]);
       document.getElementById('week-label').textContent='2026–27 Season';
       if(!events.length){$('games').innerHTML='<div class="empty-feed">No games in the current scoreboard window.</div>';}
       else {
@@ -115,6 +117,7 @@ $('update-note').textContent=`Retrying in 60 seconds (${error.message}).`;
 })();
 </script>
 </body></html>
+
 
 
 
