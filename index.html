@@ -24,6 +24,7 @@ main{padding-top:42px}.eyebrow{color:#84d6f7;letter-spacing:.22em}.eyebrow span{
 .ticker{background:linear-gradient(90deg,#087db7,#075781);color:white;border:1px solid #8bdcff;border-radius:9px;box-shadow:0 6px 20px #0076b833}.ticker-label{background:linear-gradient(135deg,#c5cdd1,#87959d);color:#082035;font-weight:1000}.ticker-run{animation-duration:34s}
 .box{background:linear-gradient(145deg,#10293c,#0a1b2a);border-color:#4a9dc3;box-shadow:0 12px 32px #0004;position:relative;overflow:hidden}.box:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(#d1d8dc,#0076b8,#d1d8dc);opacity:.8}.box-head h2{color:#ecf8fd;font-weight:900}.tag{border-color:#71b8d7;color:#d5e8f0;background:#0c2a3d}.game-card{background:linear-gradient(120deg,#12334a,#0d2233);border-color:#397da0;transition:transform .18s,border-color .18s}.game-card:hover{transform:translateY(-2px);border-color:#b9eaff}.game-state{color:#77e3b2}.empty-icon{background:linear-gradient(140deg,#087db7,#03456c);color:#fff;border-color:#b4d1df;box-shadow:0 0 0 4px #0076b822}.upcoming{border-color:#69a9c7}.footer{color:#aebdc6;border-color:#4a9dc388}.footer a{color:#8ddcff}.note{color:#a9bbc5}
 @media(max-width:760px){.heading h1{font-size:clamp(30px,8vw,46px)}.brand-extra{display:none}.date{min-width:100px;padding:8px}.top{height:60px}}
+.game-highlights{border-top:1px solid #ffffff19;margin-top:10px;padding-top:10px}.highlights-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;color:#b9eaff;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.highlights-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}.highlights-list li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;color:#e2edf3;font-size:12px;line-height:1.4}.highlight-time{white-space:nowrap;color:#a9bbc5;font-size:10px;padding-top:1px}.highlight-play.scoring{color:#aaf1cb}.play-link{color:#8ddcff;font-size:9px;text-decoration:none;white-space:nowrap}.play-link:hover{text-decoration:underline}.highlights-empty{color:#b7c5ce;font-size:11px}
 </style>
 </head>
 <body>
@@ -48,6 +49,15 @@ main{padding-top:42px}.eyebrow{color:#84d6f7;letter-spacing:.22em}.eyebrow span{
   const niceDate = date => new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',month:'short',day:'numeric'}).format(date);
   const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const dateFor = iso => new Date(iso);
+  function highlightsMarkup(event, comp, status) {
+    const live=status.state==='in', final=!!status.completed;
+    let plays=Array.isArray(event.liveHighlights)?event.liveHighlights:[];
+    if(!plays.length&&comp.situation?.lastPlay?.text) plays=[{text:comp.situation.lastPlay.text,clock:comp.status?.displayClock,period:comp.status?.period}];
+    const link=event.links?.find(item=>item.rel?.some(rel=>String(rel).toLowerCase().includes('pbp')))?.href || `https://www.espn.com/nfl/game?gameId=${encodeURIComponent(event.id||'')}`;
+    const title=live?'Live game highlights':final?'Recent game highlights':'Game highlights';
+    const entries=plays.length?`<ul class="highlights-list">${plays.map(play=>{const when=[play.clock,play.period?`Q${safe(play.period)}`:''].filter(Boolean).join(' · ');return `<li><span class="highlight-time">${safe(when||'PLAY')}</span><span class="highlight-play ${play.scoring?'scoring':''}">${safe(play.text)}${play.scoring?' ✦':''}</span></li>`;}).join('')}</ul>`:`<div class="highlights-empty">${live?'Waiting for the latest play update…':final?'No play-by-play highlights available.':'Live highlights appear here at kickoff.'}</div>`;
+    return `<div class="game-highlights"><div class="highlights-head"><span>${title}</span><a class="play-link" href="${safe(link)}" target="_blank" rel="noreferrer">Full play-by-play ↗</a></div>${entries}</div>`;
+  }
   function gameCard(event) {
     const comp=event.competitions?.[0] || {};
     const competitors=comp.competitors || [];
@@ -62,7 +72,7 @@ main{padding-top:42px}.eyebrow{color:#84d6f7;letter-spacing:.22em}.eyebrow span{
     }).join('');
     const isLive=status.state==='in';
     const when=status.completed?'FINAL':label;
-    return `<article class="game-card"><div class="game-top"><span>${safe(niceDate(dateFor(event.date)))} · ${safe(event.name||'NFL game')}</span><span class="game-state" style="${isLive?'':'color:#b5c2d4'}">${safe(when)}</span></div>${teams}</article>`;
+    return `<article class="game-card"><div class="game-top"><span>${safe(niceDate(dateFor(event.date)))} · ${safe(event.name||'NFL game')}</span><span class="game-state" style="${isLive?'':'color:#b5c2d4'}">${safe(when)}</span></div>${teams}${highlightsMarkup(event,comp,status)}</article>`;
   }
   function updateClock() {
     const now=new Date(), parts=etParts(now);
@@ -79,6 +89,8 @@ main{padding-top:42px}.eyebrow{color:#84d6f7;letter-spacing:.22em}.eyebrow span{
       if(!response.ok) throw new Error(`Scoreboard returned ${response.status}`);
       const data=await response.json();
       const events=data.events||[];
+      const highlightCandidates=events.filter(event=>{const state=event.competitions?.[0]?.status?.type;return state?.state==='in'||(state?.completed&&now-dateFor(event.date)<6*60*60*1000);}).slice(0,8);
+      await Promise.all(highlightCandidates.map(async event=>{try{const res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${encodeURIComponent(event.id)}`,{cache:'no-store'});if(!res.ok)return;const summary=await res.json();const drives=[...(summary.drives?.previous||[]),...(summary.drives?.current?[summary.drives.current]:[])];event.liveHighlights=drives.flatMap(drive=>(drive.plays||[]).map(play=>({text:play.text,clock:play.clock?.displayValue,period:play.period?.number,scoring:!!play.scoringPlay}))).filter(play=>play.text).slice(-3);}catch{}}));
       const week=data.week?.number;
       $('week-label').textContent=week?`Week ${week}`:'NFL';
       if(!events.length){$('games').innerHTML='<div class="empty-feed">No games in the current scoreboard window.</div>';}
